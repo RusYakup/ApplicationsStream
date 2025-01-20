@@ -1,0 +1,114 @@
+version: '3.8'
+
+
+x-localtime: &host_localtime
+  type: bind
+  source: /etc/localtime
+  target: /etc/localtime
+  read_only: true
+
+x-logging: &logging
+  logging:
+    driver: json-file
+    options:
+      tag: "{{.Name}}"
+      max-size: ${LOG_MAX_SIZE:-5m}
+      max-file: ${LOG_MAX_FILE:-1}
+
+services:
+  postgres:
+    image: postgres:15.2
+    restart: always
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+    volumes:
+      - type: volume
+        source: postgres_data_bewise
+        target: /var/lib/postgresql/data
+    expose:
+      - "5432"
+    ports:
+      - "5432:5432"
+    networks:
+      internal: { }
+      external: { }
+    <<: *logging
+
+  zookeeper:
+    image: bitnami/zookeeper:latest
+    ports:
+      - "2181:2181"
+    environment:
+      - ALLOW_ANONYMOUS_LOGIN=yes
+    networks:
+      internal: { }
+      external: { }
+
+  kafka:
+    image: bitnami/kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENERS: PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    #        KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
+    networks:
+      internal: { }
+      external: { }
+    env_file:
+      - .env
+    <<: *logging
+
+  app:
+    build: .
+    command: bash -c "alembic upgrade head && python main.py"
+    depends_on:
+      - postgres
+      - kafka
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?err}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?err}
+      - POSTGRES_DB=${POSTGRES_DB:?err}
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+    env_file:
+      - .env
+    <<: *logging
+    networks:
+      internal: { }
+      external: { }
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8082:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: kafka
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "kafka:9092"
+      KAFKA_CLUSTERS_0_ZOOKEEPER:zookeeper: 2181
+    networks:
+      internal: { }
+      external: { }
+
+networks:
+  internal:
+    name: server_internal
+    driver: bridge
+    internal: true
+  external:
+    name: server_external
+    driver: bridge
+
+volumes:
+  postgres_data_bewise:
+    driver: local
