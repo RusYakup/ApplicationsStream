@@ -26,8 +26,8 @@
 
 1. **Клонируйте репозиторий**:
    ```bash
-   git clone https://github.com/RusYakup/Bewise..git
-   cd Bewise.
+   git https://github.com/RusYakup/ApplicationsStream.git
+   cd ApplicationsStream
    ```
 2. **Установите зависимости**:
    В корневой директории проекта выполните:
