@@ -26,7 +26,7 @@
 
 1. **Клонируйте репозиторий**:
    ```bash
-   git https://github.com/RusYakup/ApplicationsStream.git
+   git clone https://github.com/RusYakup/ApplicationsStream.git
    cd ApplicationsStream
    ```
 2. **Установите зависимости**:
