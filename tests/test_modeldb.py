@@ -1,7 +1,6 @@
 import pytest
 from sqlalchemy import select
 from src.modeldb import Application
-
 from tests.conftest import db_manager, application
 
 
