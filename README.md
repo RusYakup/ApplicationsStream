@@ -57,7 +57,7 @@
     - Находится в корневой директории проекта.
     - Запуск с корневой директории проекта:
       ```bash
-      docker compose -f deploy/docker/docker-compose.yaml up -d --build
+      docker compose -f docker-compose.yaml up -d --build
      ```
 
 ### Запуск Unit-тестов.
@@ -86,7 +86,7 @@
     - Находится в корневой директории.
     - Запуск с корневой директории проекта:
       ```bash
-        docker compose -f docker-compose.yaml up -d --build
+        docker compose -f docker-compose.сonsumer.yaml up -d --build
       ```
 
 ## Управление миграциями с Alembic
